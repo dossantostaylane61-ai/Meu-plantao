@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Plantões</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+    .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    h2 { margin-top: 0; font-size: 1.1rem; color: #1c1e21; }
+    label { font-size: 0.85rem; font-weight: 600; color: #65676b; display: block; margin-top: 8px; }
+    input, button { width: 100%; padding: 12px; margin-top: 4px; border: 1px solid #dddfe2; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+    button { background: #1877f2; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 12px; }
+    .btn-delete { background: #ff4d4f; color: white; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: auto; margin-top: 0; }
+    .total-box { background: #e7f3ff; border: 1px solid #1877f2; color: #1877f2; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { background: #fff; padding: 12px; margin-bottom: 8px; border-left: 5px solid #1877f2; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Cadastrar Plantão</h2>
+    <label>Data:</label>
+    <input type="date" id="data">
+    
+    <label>Local / Empresa:</label>
+    <input type="text" id="local" placeholder="Ex: Posto / Evento">
+    
+    <label>Valor (R$):</label>
+    <input type="number" id="valor" placeholder="Ex: 200">
+    
+    <button onclick="salvarPlantao()">Salvar Plantão</button>
+  </div>
+
+  <div class="card">
+    <h2>Meus Plantões</h2>
+    <div class="total-box" id="totalGanhos">Total: R$ 0,00</div>
+    <ul id="lista"></ul>
+  </div>
+
+  <script>
+    function carregarPlantoes() {
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      const lista = document.getElementById('lista');
+      const totalBox = document.getElementById('totalGanhos');
+      lista.innerHTML = '';
+      let total = 0;
+
+      plantoes.forEach((p, index) => {
+        total += parseFloat(p.valor || 0);
+        const dataBr = p.data.split('-').reverse().join('/');
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <div>
+            <strong>${dataBr}</strong><br>
+            <span>${p.local}</span><br>
+            <span style="color: green; font-weight: bold;">R$ ${parseFloat(p.valor).toFixed(2)}</span>
+          </div>
+          <button class="btn-delete" onclick="excluirPlantao(${index})">Excluir</button>
+        `;
+        lista.appendChild(item);
+      });
+
+      totalBox.innerText = `Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    function salvarPlantao() {
+      const data = document.getElementById('data').value;
+      const local = document.getElementById('local').value;
+      const valor = document.getElementById('valor').value;
+
+      if (!data || !local || !valor) return alert('Preencha todos os campos!');
+
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      plantoes.push({ data, local, valor });
+      localStorage.setItem('plantoes', JSON.stringify(plantoes));
+      
+      document.getElementById('data').value = '';
+      document.getElementById('local').value = '';
+      document.getElementById('valor').value = '';
+
+      carregarPlantoes();
+    }
+
+    function excluirPlantao(index) {
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      plantoes.splice(index, 1);
+      localStorage.setItem('plantoes', JSON.stringify(plantoes));
+      carregarPlantoes();
+    }
+
+    carregarPlantoes();
+  </script>
+</body>
+</html>
