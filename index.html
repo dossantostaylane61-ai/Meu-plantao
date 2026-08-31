@@ -2,95 +2,304 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Meus Plantões</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
-    .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
-    h2 { margin-top: 0; font-size: 1.1rem; color: #1c1e21; }
-    label { font-size: 0.85rem; font-weight: 600; color: #65676b; display: block; margin-top: 8px; }
-    input, button { width: 100%; padding: 12px; margin-top: 4px; border: 1px solid #dddfe2; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-    button { background: #1877f2; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 12px; }
-    .btn-delete { background: #ff4d4f; color: white; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: auto; margin-top: 0; }
-    .total-box { background: #e7f3ff; border: 1px solid #1877f2; color: #1877f2; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 12px; }
-    ul { list-style: none; padding: 0; margin: 0; }
-    li { background: #fff; padding: 12px; margin-bottom: 8px; border-left: 5px solid #1877f2; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #000000; color: #ffffff; margin: 0; padding: 16px; padding-bottom: 90px; }
+    
+    /* Topo */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .month-pill { background: #1c1c1e; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 1rem; }
+    .header-actions { display: flex; gap: 12px; }
+    .icon-btn { background: #1c1c1e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .btn-add { background: #00d2b5; color: #000; font-size: 1.5rem; font-weight: bold; }
+
+    /* Banner Financeiro / Totais */
+    .summary-card { background: #161618; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; border: 1px solid #2c2c2e; }
+    .summary-item { display: flex; flex-direction: column; }
+    .summary-label { font-size: 0.75rem; color: #8e8e93; font-weight: 600; }
+    .summary-value { font-size: 1.1rem; font-weight: bold; color: #00d2b5; margin-top: 2px; }
+
+    /* Card do Calendário */
+    .calendar-card { background: #161618; border-radius: 24px; padding: 16px; margin-bottom: 20px; }
+    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: #8e8e93; font-size: 0.8rem; margin-bottom: 12px; }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+    .day { padding: 10px 0; font-size: 0.95rem; font-weight: 500; border-radius: 50%; cursor: pointer; position: relative; }
+    .day.weekend { background: rgba(0, 210, 181, 0.08); }
+    .day.selected { background: #00d2b5; color: #000; font-weight: bold; }
+    .day.has-plantao::after { content: ''; width: 4px; height: 4px; background: #00d2b5; border-radius: 50%; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); }
+
+    /* Seção do Dia Selecionado */
+    .selected-date-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 1.05rem; }
+    .empty-state { text-align: center; color: #8e8e93; margin-top: 30px; }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.5; }
+
+    /* Card do Plantão Cadastrado */
+    .plantao-card { background: #161618; padding: 16px; border-radius: 16px; margin-bottom: 10px; border-left: 4px solid #00d2b5; display: flex; justify-content: space-between; align-items: center; }
+    .plantao-info span { display: block; }
+    .plantao-local { font-weight: bold; font-size: 1rem; color: #fff; }
+    .plantao-detalhes { font-size: 0.85rem; color: #8e8e93; margin-top: 2px; }
+    .plantao-val { color: #00d2b5; font-weight: bold; margin-top: 4px; font-size: 0.95rem; }
+    .btn-del { background: transparent; border: none; color: #ff453a; font-size: 0.9rem; cursor: pointer; padding: 8px; }
+
+    /* Modal Form */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
+    .modal-content { background: #1c1c1e; padding: 20px; border-radius: 20px; width: 90%; max-width: 360px; box-sizing: border-box; }
+    .time-group { display: flex; gap: 10px; }
+    .modal-content label { color: #8e8e93; font-size: 0.8rem; margin-top: 8px; display: block; }
+    .modal-content input { width: 100%; padding: 12px; margin: 4px 0 10px; background: #2c2c2e; border: none; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    .btn-save { background: #00d2b5; color: #000; }
+    .btn-cancel { background: #2c2c2e; color: #fff; }
+
+    /* Navegação Inferior */
+    .navbar { position: fixed; bottom: 16px; left: 16px; right: 16px; background: #161618; border-radius: 30px; display: flex; justify-content: space-around; padding: 10px 0; border: 1px solid #2c2c2e; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #8e8e93; font-size: 0.7rem; text-decoration: none; cursor: pointer; }
+    .nav-item.active { color: #00d2b5; }
+    .nav-icon { font-size: 1.2rem; margin-bottom: 2px; }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>Cadastrar Plantão</h2>
-    <label>Data:</label>
-    <input type="date" id="data">
-    
-    <label>Local / Empresa:</label>
-    <input type="text" id="local" placeholder="Ex: Posto / Evento">
-    
-    <label>Valor (R$):</label>
-    <input type="number" id="valor" placeholder="Ex: 200">
-    
-    <button onclick="salvarPlantao()">Salvar Plantão</button>
+  <!-- Topo -->
+  <div class="header">
+    <div class="month-pill" id="monthTitle">agosto de 2026</div>
+    <div class="header-actions">
+      <button class="icon-btn">🔖</button>
+      <button class="icon-btn btn-add" onclick="abrirModal()">+</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Meus Plantões</h2>
-    <div class="total-box" id="totalGanhos">Total: R$ 0,00</div>
-    <ul id="lista"></ul>
+  <!-- Resumo de Horas e Valores do Mês -->
+  <div class="summary-card">
+    <div class="summary-item">
+      <span class="summary-label">TOTAL MÊS</span>
+      <span class="summary-value" id="totalMesValor">R$ 0,00</span>
+    </div>
+    <div class="summary-item" style="text-align: right;">
+      <span class="summary-label">HORAS MÊS</span>
+      <span class="summary-value" id="totalMesHoras">0h</span>
+    </div>
+  </div>
+
+  <!-- Calendário -->
+  <div class="calendar-card">
+    <div class="weekdays">
+      <div>seg.</div><div>ter.</div><div>qua.</div><div>qui.</div><div>sex.</div><div>sáb.</div><div>dom.</div>
+    </div>
+    <div class="days-grid" id="daysGrid"></div>
+  </div>
+
+  <!-- Lista de Plantões do Dia -->
+  <div class="selected-date-header">
+    <span id="selectedDateText">dia 31 de agosto</span>
+    <span id="diaHorasTotal" style="color:#00d2b5; font-size:0.9rem;"></span>
+  </div>
+
+  <div id="plantoesContainer"></div>
+
+  <!-- Modal Cadastrar -->
+  <div class="modal" id="modalPlantao">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:#fff;">Novo Plantão</h3>
+      
+      <label>Data</label>
+      <input type="date" id="inputData">
+
+      <label>Local / Empresa</label>
+      <input type="text" id="inputLocal" placeholder="Ex: Hospital / Evento">
+
+      <div class="time-group">
+        <div style="flex:1;">
+          <label>Início</label>
+          <input type="time" id="inputInicio" value="07:00">
+        </div>
+        <div style="flex:1;">
+          <label>Fim</label>
+          <input type="time" id="inputFim" value="19:00">
+        </div>
+      </div>
+
+      <label>Valor do Plantão (R$)</label>
+      <input type="number" id="inputValor" placeholder="Ex: 500">
+
+      <div class="modal-actions">
+        <button class="modal-btn btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button class="modal-btn btn-save" onclick="salvarPlantao()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegação Inferior -->
+  <div class="navbar">
+    <div class="nav-item active"><span class="nav-icon">📅</span>Plantões</div>
+    <div class="nav-item" onclick="alert('Total a receber neste mês: ' + document.getElementById('totalMesValor').innerText)"><span class="nav-icon">👛</span>Financeiro</div>
+    <div class="nav-item" onclick="alert('Total de horas trabalhadas no mês: ' + document.getElementById('totalMesHoras').innerText)"><span class="nav-icon">📊</span>Relatório</div>
+    <div class="nav-item"><span class="nav-icon">⚙️</span>Ajustes</div>
   </div>
 
   <script>
-    function carregarPlantoes() {
-      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
-      const lista = document.getElementById('lista');
-      const totalBox = document.getElementById('totalGanhos');
-      lista.innerHTML = '';
-      let total = 0;
+    let dataSelecionadaIso = "2026-08-31";
 
-      plantoes.forEach((p, index) => {
-        total += parseFloat(p.valor || 0);
-        const dataBr = p.data.split('-').reverse().join('/');
-        const item = document.createElement('li');
-        item.innerHTML = `
-          <div>
-            <strong>${dataBr}</strong><br>
-            <span>${p.local}</span><br>
-            <span style="color: green; font-weight: bold;">R$ ${parseFloat(p.valor).toFixed(2)}</span>
-          </div>
-          <button class="btn-delete" onclick="excluirPlantao(${index})">Excluir</button>
-        `;
-        lista.appendChild(item);
+    // Função para calcular diferença em horas entre horário de início e fim
+    function calcularDuracaoHoras(inicio, fim) {
+      if (!inicio || !fim) return 0;
+      const [h1, m1] = inicio.split(':').map(Number);
+      const [h2, m2] = fim.split(':').map(Number);
+      
+      let minIn = h1 * 60 + m1;
+      let minFim = h2 * 60 + m2;
+
+      // Se o horário final for menor, o plantão atravessou a madrugada
+      if (minFim <= minIn) {
+        minFim += 24 * 60;
+      }
+
+      return (minFim - minIn) / 60;
+    }
+
+    function renderizarResumoMes() {
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      let totalValor = 0;
+      let totalHoras = 0;
+
+      plantoes.forEach(p => {
+        totalValor += parseFloat(p.valor || 0);
+        totalHoras += calcularDuracaoHoras(p.inicio, p.fim);
       });
 
-      totalBox.innerText = `Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      document.getElementById('totalMesValor').innerText = `R$ ${totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      document.getElementById('totalMesHoras').innerText = `${totalHoras.toFixed(1).replace('.0', '')}h`;
+    }
+
+    function renderizarCalendario() {
+      const grid = document.getElementById('daysGrid');
+      grid.innerHTML = '';
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+
+      const totalDias = 31;
+      const offsetInicio = 5; // Agosto/2026 começa no Sábado
+
+      for (let i = 0; i < offsetInicio; i++) {
+        grid.appendChild(document.createElement('div'));
+      }
+
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const diaFormatado = String(dia).padStart(2, '0');
+        const iso = `2026-08-${diaFormatado}`;
+        const dayEl = document.createElement('div');
+        
+        const colIndex = (dia + offsetInicio - 1) % 7;
+        const isWeekend = (colIndex === 5 || colIndex === 6);
+        
+        dayEl.className = `day ${isWeekend ? 'weekend' : ''} ${iso === dataSelecionadaIso ? 'selected' : ''}`;
+        dayEl.innerText = dia;
+
+        if (plantoes.some(p => p.data === iso)) {
+          dayEl.classList.add('has-plantao');
+        }
+
+        dayEl.onclick = () => {
+          dataSelecionadaIso = iso;
+          renderizarCalendario();
+          renderizarPlantoesDia();
+        };
+
+        grid.appendChild(dayEl);
+      }
+
+      renderizarResumoMes();
+    }
+
+    function renderizarPlantoesDia() {
+      const container = document.getElementById('plantoesContainer');
+      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      const doDia = plantoes.filter(p => p.data === dataSelecionadaIso);
+
+      const partesData = dataSelecionadaIso.split('-');
+      document.getElementById('selectedDateText').innerText = `dia ${partesData[2]} de agosto`;
+
+      if (doDia.length === 0) {
+        document.getElementById('diaHorasTotal').innerText = '';
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🗓️</div>
+            <div>Nenhum plantão nesta data</div>
+          </div>`;
+        return;
+      }
+
+      let horasDia = 0;
+      container.innerHTML = '';
+
+      doDia.forEach((p, index) => {
+        const duracao = calcularDuracaoHoras(p.inicio, p.fim);
+        horasDia += duracao;
+
+        const card = document.createElement('div');
+        card.className = 'plantao-card';
+        card.innerHTML = `
+          <div class="plantao-info">
+            <span class="plantao-local">${p.local}</span>
+            <span class="plantao-detalhes">🕒 ${p.inicio || '--:--'} às ${p.fim || '--:--'} (${duracao.toFixed(1).replace('.0', '')}h)</span>
+            <span class="plantao-val">R$ ${parseFloat(p.valor).toFixed(2)}</span>
+          </div>
+          <button class="btn-del" onclick="excluirPlantao('${p.data}', ${index})">Excluir</button>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('diaHorasTotal').innerText = `${horasDia.toFixed(1).replace('.0', '')}h no dia`;
+    }
+
+    function abrirModal() {
+      document.getElementById('inputData').value = dataSelecionadaIso;
+      document.getElementById('modalPlantao').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      document.getElementById('modalPlantao').style.display = 'none';
     }
 
     function salvarPlantao() {
-      const data = document.getElementById('data').value;
-      const local = document.getElementById('local').value;
-      const valor = document.getElementById('valor').value;
+      const data = document.getElementById('inputData').value;
+      const local = document.getElementById('inputLocal').value;
+      const inicio = document.getElementById('inputInicio').value;
+      const fim = document.getElementById('inputFim').value;
+      const valor = document.getElementById('inputValor').value;
 
       if (!data || !local || !valor) return alert('Preencha todos os campos!');
 
       const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
-      plantoes.push({ data, local, valor });
+      plantoes.push({ data, local, inicio, fim, valor: parseFloat(valor) });
       localStorage.setItem('plantoes', JSON.stringify(plantoes));
-      
-      document.getElementById('data').value = '';
-      document.getElementById('local').value = '';
-      document.getElementById('valor').value = '';
 
-      carregarPlantoes();
+      document.getElementById('inputLocal').value = '';
+      document.getElementById('inputValor').value = '';
+      fecharModal();
+      renderizarCalendario();
+      renderizarPlantoesDia();
     }
 
-    function excluirPlantao(index) {
-      const plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
-      plantoes.splice(index, 1);
+    function excluirPlantao(data, indexNoDia) {
+      let plantoes = JSON.parse(localStorage.getItem('plantoes')) || [];
+      let contador = 0;
+      plantoes = plantoes.filter(p => {
+        if (p.data === data) {
+          if (contador === indexNoDia) { contador++; return false; }
+          contador++;
+        }
+        return true;
+      });
       localStorage.setItem('plantoes', JSON.stringify(plantoes));
-      carregarPlantoes();
+      renderizarCalendario();
+      renderizarPlantoesDia();
     }
 
-    carregarPlantoes();
+    renderizarCalendario();
+    renderizarPlantoesDia();
   </script>
 </body>
 </html>
